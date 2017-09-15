@@ -19,74 +19,67 @@ var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'access-control-allow-headers': 'content-type, accept',
-  'access-control-max-age': 10 // Seconds.
+  'access-control-max-age': 10, // Seconds.
+  'content-type': 'application/json'
 };
 
 // {"objectId":"DsZyzrEDTN","username":"Joelle","roomname":"lobby","text":" test post","createdAt":"2017-09-04T17:34:28.310Z","updatedAt":"2017-09-04T17:34:28.310Z"}
 
 
 // array of message objects
-var messages = { results: [{ "objectId": "DsZyzrEDTN", "username": "Joelle", "roomname": "lobby", "text": " test post", "createdAt": "2017-09-04T17:34:28.310Z", "updatedAt": "2017-09-04T17:34:28.310Z" }, { "objectId": "DsZyzrEDTN", "username": "Joelle", "roomname": "lobby", "text": " test post", "createdAt": "2017-09-04T17:34:28.310Z", "updatedAt": "2017-09-04T17:34:28.310Z" }] };
+var messages = { results: [] };
 
 exports.requestHandler = function(request, response) {
-  console.log('###############################');
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
-  // var httpRequestType = request.headers['access-control-request-method'];
+
   var path = url.parse(request.url);
-
-  // console.log('path', path); // object holding various values including search and query
-
-  var requestArray = request.url.split('/');
-  var data = requestArray[1];
-
-  //console.log(requestArray); // [classes, meesages, orderCreatedAt]
-
-  //console.log('request method', request.method); // get or options
-  //console.log('response method', response.method); // undefined
-
-
   var headers = defaultCorsHeaders;
   var statusCode = 200;
-  headers['Content-Type'] = 'application/json';
+  console.log('PATH NAME CHECK ====', path.pathname === '/classes/messages');
+  console.log('PATH NAME CHECK ====', path.pathname === '/classes/room');
 
-  if (request.method === 'GET') {
-    // check for GET request - if
-    //console.log('----YOU GOT GOT----');
-    response.writeHead(statusCode, headers);
+  if (path.pathname !== '/classes/messages') {
+    response.writeHead(404, headers);
+    response.end();
+  } else if (request.method === 'GET') {
+    //console.log('get === >' , JSON.stringify(messages));
+    response.writeHead(200, headers);
     response.end(JSON.stringify(messages));
+
     // username=ed&text=wordsinmessage&roomname=lobby
 
   } else if (request.method === 'POST') {
     // check for POST request - else if
-    console.log('----POST MADE----');
+    var data = '';
     request.on('data', (message) => {
 
+      data += message;
 
+    });
+    request.on('end', () => {
+      // let bufferRaw = message.toString();
+      let bufferToJSON = JSON.parse(data);
 
-      let bufferRaw = message.toString();
-      console.log(bufferRaw);
-    }).on('end', () => {
+      let now = new Date();
 
-      response.writeHead(statusCode, headers);
-      response.end();
+      bufferToJSON.objectId = messages.results.length;
+      bufferToJSON.createdAt = now.toISOString();
+      bufferToJSON.updatedAt = now.toISOString();
+
+      messages.results.push(bufferToJSON);
+      response.writeHead(201, headers);
+      response.end(JSON.stringify(data));
     });
 
 
 
   } else if (request.method === 'OPTIONS') {
-    //console.log('----OPTIONSSSSSSSSS----');
     response.writeHead(statusCode, headers);
     response.end();
   }
 
-  // else {
-  //   // else bad link - 404 status code
 
-  //   response.writeHead(404, headers);
-  //   response.end();
-
-  // }
 
 
   // response.writeHead(statusCode, headers);

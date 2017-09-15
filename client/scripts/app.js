@@ -42,9 +42,9 @@ var app = {
     $.ajax({
       url: app.server,
       type: 'POST',
-      data: message,
+      data: JSON.stringify(message),
+      contentType: 'application/json',
       success: function (data) {
-        console.log(data);
         // Clear messages input
         app.$message.val('');
 
@@ -72,7 +72,7 @@ var app = {
 
         // Get the last message
         var mostRecentMessage = data.results[data.results.length - 1];
-
+        console.log('OBJECT ID', mostRecentMessage.objectId);
         // Only bother updating the DOM if we have a new message
         if (mostRecentMessage.objectId !== app.lastMessageId) {
           // Update the UI with the fetched rooms
